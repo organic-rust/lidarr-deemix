@@ -1,7 +1,7 @@
 import _ from "lodash";
 const deemixUrl = "http://127.0.0.1:7272";
 import { getAllLidarrArtists } from "./lidarr.js";
-import { titleCase, normalize } from "./helpers.js";
+import { normalize } from "./helpers.js";
 import { link } from "fs";
 
 function fakeId(id: any, type: string) {
@@ -222,7 +222,7 @@ export async function getAlbum(id: string) {
         oldids: [],
         releasedate: d["release_date"],
         status: "Official",
-        title: titleCase(d["title"]),
+        title: d["title"],
         track_count: d["nb_tracks"],
         tracks: tracks.map((t: any, idx: number) => ({
           artistid: lidarr2["id"],
@@ -239,7 +239,7 @@ export async function getAlbum(id: string) {
       },
     ],
     secondarytypes: d["title"].toLowerCase().includes("live") ? ["Live"] : [],
-    title: titleCase(d["title"]),
+    title: d["title"],
     type: getType(d["record_type"]),
   };
 }
@@ -252,7 +252,7 @@ export async function getAlbums(name: string) {
     OldIds: [],
     ReleaseStatuses: ["Official"],
     SecondaryTypes: d["title"].toLowerCase().includes("live") ? ["Live"] : [],
-    Title: titleCase(d["title"]),
+    Title: d["title"],
     LowerTitle: d["title"].toLowerCase(),
     Type: getType(d["record_type"]),
   }));

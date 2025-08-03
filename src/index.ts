@@ -12,7 +12,6 @@ import {
 } from "./deemix.js";
 import { removeKeys } from "./helpers.js";
 
-const lidarrApiUrl = "https://api.musicinfo.pro";
 const scrobblerApiUrl = "https://ws.audioscrobbler.com";
 
 dotenv.config();
@@ -80,7 +79,7 @@ async function doApi(req: any, res: any) {
   const url = `${u.pathname}${u.search}`;
   let data: any;
   try {
-    data = await fetch(`${lidarrApiUrl}${url}`, {
+    data = await fetch(`${process.env.LIDARR_METADATA_SERVER}${url}`, {
       method: method,
       body: body,
       headers: nh,

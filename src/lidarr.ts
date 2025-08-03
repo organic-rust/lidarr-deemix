@@ -1,10 +1,8 @@
 import { normalize } from "./helpers.js";
 
-const lidarrApiUrl = "https://api.musicinfo.pro";
-
 export async function getLidarArtist(name: string) {
   const res = await fetch(
-    `${lidarrApiUrl}/api/v0.4/search?type=all&query=${name}`
+    `${process.env.LIDARR_METADATA_SERVER}/api/v0.4/search?type=all&query=${name}`
   );
   const json = (await res.json()) as [];
   const a = json.find(

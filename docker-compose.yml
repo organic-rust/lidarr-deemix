@@ -1,7 +1,6 @@
-version: "3"
 services:
   lidarr-deemix:
-    image: ghcr.io/ad-on-is/lidarr-deemix
+    image: ghcr.io/organic-rust/lidarr-deemix
     container_name: lidarr-deemix
     ports:
       - 8080:8080 # optional, only if you want to expose the port to the host
@@ -9,3 +8,6 @@ services:
       - DEEMIX_ARL=xxxx
       - OVERRIDE_MB=false # set to true to override MusicBrainz completely !!! CAUTION !!! will delete all artists/albums imported from MB
       - PRIO_DEEMIX=false # set to true to prioritize Deemix albums over Lidarr (adds dupliactes on existing albums, needs cleanup and rescan)
+      - LIDARR_URL=http://192.168.100.201:8686 # The URL of your Lidarr instance
+      - LIDARR_API_KEY=xxxx # Lidarr API key - found in Settings > General
+      - LIDARR_METADATA_SERVER=https://api.musicinfo.pro # Lidarr metadata server to use. Default is https://api.lidarr.audio
