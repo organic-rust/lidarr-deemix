@@ -1,6 +1,6 @@
 import { normalize } from "./helpers.js";
 
-const lidarrApiUrl = "https://api.lidarr.audio";
+const lidarrApiUrl = "https://api.musicinfo.pro";
 
 export async function getLidarArtist(name: string) {
   const res = await fetch(

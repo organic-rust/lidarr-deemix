@@ -12,7 +12,7 @@ import {
 } from "./deemix.js";
 import { removeKeys } from "./helpers.js";
 
-const lidarrApiUrl = "https://api.lidarr.audio";
+const lidarrApiUrl = "https://api.musicinfo.pro";
 const scrobblerApiUrl = "https://ws.audioscrobbler.com";
 
 dotenv.config();
