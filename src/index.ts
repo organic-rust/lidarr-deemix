@@ -11,6 +11,7 @@ import {
   deemixTracks,
 } from "./deemix.js";
 import { removeKeys } from "./helpers.js";
+import { drm } from "./deemix.js";
 
 const scrobblerApiUrl = "https://ws.audioscrobbler.com";
 
@@ -52,10 +53,6 @@ async function doScrobbler(req: any, res: any) {
   res.statusCode = status;
   res.headers = data.headers;
   let json = await data.json();
-
-  if (process.env.OVERRIDE_MB === "true") {
-    json = removeKeys(json, "mbid");
-  }
 
   return { newres: res, data: json };
 }
@@ -116,18 +113,26 @@ async function doApi(req: any, res: any) {
       status = lidarr === null ? 404 : 200;
     } else {
       lidarr = await getArtist(lidarr);
-      if (process.env.OVERRIDE_MB === "true") {
-        // prevent refetching from musicbrainz
-        status = 404;
-        lidarr = {};
-      }
     }
   }
   if (url.includes("/v0.4/album/")) {
+    let req_id = url.slice(-36);
     if (url.includes("-bbbb-")) {
       let id = url.split("/").pop()?.split("-").pop()?.replaceAll("b", "");
       lidarr = await getAlbum(id!);
       status = lidarr === null ? 404 : 200;
+    } else if (process.env.MERGE_RELEASES === "true" && drm.has(req_id!)) {
+      // Get deezer id from fake album id
+      let id = drm.get(req_id)?.split("-").pop()?.replaceAll("b", "");
+      console.log(`Album has been previously found on Deezer - adding ${id} to releases`);
+      
+      // Get album info from deemix and merge releases
+      let deemix_info = await getAlbum(id!);
+      
+      lidarr["releases"] = [
+        ...lidarr["releases"],
+        ...deemix_info["releases"],
+      ];
     }
   }
 
@@ -157,7 +162,4 @@ fastify.get("*", async (req, res) => {
 
 fastify.listen({ port: 7171, host: "0.0.0.0" }, (err, address) => {
   console.log("Lidarr++Deemix running at " + address);
-  if (process.env.OVERRIDE_MB === "true") {
-    console.log("Overriding MusicBrainz API with Deemix API");
-  }
 });

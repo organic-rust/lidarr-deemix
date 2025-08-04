@@ -4,6 +4,9 @@ import { getAllLidarrArtists } from "./lidarr.js";
 import { normalize } from "./helpers.js";
 import { link } from "fs";
 
+// Used to map deezer album IDs to musicbrainz release groups so they can be merged into later requests
+export let drm = new Map<string, string>();
+
 function fakeId(id: any, type: string) {
   // artist
   let p = "a";
@@ -160,38 +163,20 @@ export async function getAlbum(id: string) {
 
   let lidarr2: any = {};
 
-  if (process.env.OVERRIDE_MB === "true") {
-    lidarr = deemix;
-    lidarr2 = {
-      id: lidarr["id"],
-      artistname: lidarr["artistname"],
-      artistaliases: [],
-      disambiguation: "",
-      overview: "",
-      genres: [],
-      images: [],
-      links: [],
-      oldids: [],
-      sortname: lidarr["artistname"].split(" ").reverse().join(", "),
-      status: "active",
-      type: "Arist",
-    };
-  } else {
-    lidarr2 = {
-      id: lidarr!["foreignArtistId"],
-      artistname: lidarr!["artistName"],
-      artistaliases: [],
-      disambiguation: "",
-      overview: "",
-      genres: [],
-      images: [],
-      links: [],
-      oldids: [],
-      sortname: lidarr!["artistName"].split(" ").reverse().join(", "),
-      status: "active",
-      type: "Arist",
-    };
-  }
+  lidarr2 = {
+    id: lidarr!["foreignArtistId"],
+    artistname: lidarr!["artistName"],
+    artistaliases: [],
+    disambiguation: "",
+    overview: "",
+    genres: [],
+    images: [],
+    links: [],
+    oldids: [],
+    sortname: lidarr!["artistName"].split(" ").reverse().join(", "),
+    status: "active",
+    type: "Arist",
+  };
 
   const tracks = await deemixTracks(d["id"]);
   return {
@@ -210,12 +195,12 @@ export async function getAlbum(id: string) {
     releases: [
       {
         country: ["Worldwide"],
-        disambiguation: "",
+        disambiguation: "Deezer",
         id: `${fakeId(d["id"], "release")}`,
         label: [d["label"]],
 
         media: _.uniqBy(tracks, "disk_number").map((t: any) => ({
-          Format: "CD",
+          Format: "Digital Media",
           Name: "",
           Position: t["disk_number"],
         })),
@@ -272,15 +257,15 @@ export async function search(
   let lartist;
   let lidx = -1;
   let didx = -1;
-  if (process.env.OVERRIDE_MB !== "true") {
-    for (const [i, artist] of lidarr.entries()) {
-      if (artist["album"] === null) {
-        lartist = artist;
-        lidx = i;
-        break;
-      }
+  
+  for (const [i, artist] of lidarr.entries()) {
+    if (artist["album"] === null) {
+      lartist = artist;
+      lidx = i;
+      break;
     }
   }
+
   if (lartist) {
     let dartist;
     for (const [i, d] of dartists.entries()) {
@@ -360,23 +345,9 @@ export async function search(
 
   if (!isManual) {
     dtolartists = dtolartists.map((a) => a.artist);
-    if (process.env.OVERRIDE_MB === "true") {
-      dtolartists = [
-        dtolartists.filter((a) => {
-          return (
-            a["artistname"] === decodeURIComponent(query) ||
-            normalize(a["artistname"]) === normalize(decodeURIComponent(query))
-          );
-        })[0],
-      ];
-    }
   }
 
   lidarr = [...lidarr, ...dtolartists];
-
-  if (process.env.OVERRIDE_MB === "true") {
-    lidarr = dtolartists;
-  }
 
   return lidarr;
 }
@@ -412,33 +383,29 @@ export async function getArtist(lidarr: any) {
   const albums = await getAlbums(lidarr["artistname"]);
 
   let existing = lidarr["Albums"].map((a: any) => normalize(a["Title"]));
-  if (process.env.PRIO_DEEMIX === "true") {
-    existing = albums.map((a: any) => normalize(a["Title"]));
+  
+  // Match release groups with the same name, and store the IDs so that the releases can be merged when the album info is requested
+  for (let lalbum of lidarr["Albums"]) {
+    for (let dalbum of albums) {
+		if (normalize(lalbum["Title"]) === normalize(dalbum["Title"])) {
+			console.log(`Matched release ${lalbum["Title"]}`);
+			drm.set(lalbum["Id"], dalbum["Id"]);
+			
+			// Make sure that Official is included as a release status as we will be adding an official release later
+			if (process.env.MERGE_RELEASES === "true" && !lalbum["ReleaseStatuses"].includes("Official")) {
+				lalbum["ReleaseStatuses"].push("Official");
+			}
+		}
+	}
+    
   }
-  if (process.env.OVERRIDE_MB === "true") {
-    lidarr["images"] = [
-      {
-        CoverType: "Poster",
-        Url: artist!["picture_xl"],
-      },
-    ];
-    lidarr["Albums"] = albums;
-  } else {
-    if (process.env.PRIO_DEEMIX === "true") {
-      lidarr["Albums"] = [
-        ...lidarr["Albums"].filter(
-          (a: any) => !existing.includes(normalize(a["Title"]))
-        ),
-        ...albums,
-      ];
-    } else {
-      lidarr["Albums"] = [
-        ...lidarr["Albums"],
-        ...albums.filter((a) => !existing.includes(normalize(a["Title"]))),
-      ];
-    }
-  }
-
+  
+  // Add albums that are only on Deezer
+  lidarr["Albums"] = [
+    ...lidarr["Albums"],
+    ...albums.filter((a) => !existing.includes(normalize(a["Title"]))),
+  ];
+  
   return lidarr;
 }
 
