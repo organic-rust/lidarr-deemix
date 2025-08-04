@@ -77,9 +77,15 @@ async function doApi(req: any, res: any) {
   });
 
   const url = `${u.pathname}${u.search}`;
+  let url_r = url;
+  
+  if (process.env.SELF_HOSTED_METADATA === "true" && url.startsWith("/api/v0.4/")) {
+    url_r = url.slice(9);
+  }
+  
   let data: any;
   try {
-    data = await fetch(`${process.env.LIDARR_METADATA_SERVER}${url}`, {
+    data = await fetch(`${process.env.LIDARR_METADATA_SERVER}${url_r}`, {
       method: method,
       body: body,
       headers: nh,

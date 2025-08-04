@@ -1,8 +1,12 @@
 import { normalize } from "./helpers.js";
 
 export async function getLidarArtist(name: string) {
+  let path = "/api/v0.4/search?type=all&query=${name}";
+  if (process.env.SELF_HOSTED_METADATA === "true") {
+    path = path.slice(9);
+  }
   const res = await fetch(
-    `${process.env.LIDARR_METADATA_SERVER}/api/v0.4/search?type=all&query=${name}`
+    `${process.env.LIDARR_METADATA_SERVER}${path}`
   );
   const json = (await res.json()) as [];
   const a = json.find(

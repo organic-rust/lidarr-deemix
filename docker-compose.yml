@@ -11,3 +11,4 @@ services:
       - LIDARR_URL=http://192.168.100.201:8686 # The URL of your Lidarr instance
       - LIDARR_API_KEY=xxxx # Lidarr API key - found in Settings > General
       - LIDARR_METADATA_SERVER=https://api.musicinfo.pro # Lidarr metadata server to use. Default is https://api.lidarr.audio
+      - SELF_HOSTED_METADATA=false # Removes "/api/v0.4" from path in requests to metadata server. Set to true if self-hosting
