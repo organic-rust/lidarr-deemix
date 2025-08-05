@@ -1,5 +1,10 @@
-# Due to lack of time, this project is not maintained anymore. Feel free to fork!
+<h4>Fork of ad-on-is/lidarr-deemix with some small improvements:</h4>
 
+- Configurable url for metadata server (currently defaults to api.musicinfo.pro)
+- Adds deemix release into musicbrainz release group where possible so both can be visible to Lidarr
+- Removed case conversion for deemix album titles
+
+---
 <div align="center">
 <img src="./images/logo.webp" height="200" /><br />
 <h1>Lidarr++Deemix</h1>
