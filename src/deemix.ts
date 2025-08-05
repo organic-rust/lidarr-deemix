@@ -62,9 +62,7 @@ export async function deemixArtist(id: string): Promise<any> {
         Id: fakeId(a["id"], "album"),
         OldIds: [],
         ReleaseStatuses: ["Official"],
-        SecondaryTypes: a["title"].toLowerCase().includes("live")
-          ? ["Live"]
-          : [],
+        SecondaryTypes: [],
         Title: a["title"],
         Type: getType(a["record_type"]),
       })),
@@ -223,7 +221,7 @@ export async function getAlbum(id: string) {
         })),
       },
     ],
-    secondarytypes: d["title"].toLowerCase().includes("live") ? ["Live"] : [],
+    secondarytypes: [],
     title: d["title"],
     type: getType(d["record_type"]),
   };
@@ -236,7 +234,7 @@ export async function getAlbums(name: string) {
     Id: `${fakeId(d["id"], "album")}`,
     OldIds: [],
     ReleaseStatuses: ["Official"],
-    SecondaryTypes: d["title"].toLowerCase().includes("live") ? ["Live"] : [],
+    SecondaryTypes: [],
     Title: d["title"],
     LowerTitle: d["title"].toLowerCase(),
     Type: getType(d["record_type"]),
