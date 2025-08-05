@@ -1,7 +1,7 @@
 import latinize from "latinize";
 
 export function normalize(str: string) {
-  return latinize(str.toLowerCase());
+  return latinize(str.toLowerCase()).replace("'", "’");
 }
 
 export function removeKeys(obj: any, keys: any) {
