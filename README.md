@@ -2,7 +2,7 @@
 
 - Configurable url for metadata server (currently defaults to api.musicinfo.pro)
 - Adds deemix release into musicbrainz release group where possible so both can be visible to Lidarr
-- Removed case conversion for deemix album titles
+- Improved handling and matching of release titles
 
 ---
 <div align="center">
