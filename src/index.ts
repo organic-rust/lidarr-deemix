@@ -124,7 +124,7 @@ async function doApi(req: any, res: any) {
     } else if (process.env.MERGE_RELEASES === "true" && drm.has(req_id!)) {
       // Get deezer id from fake album id
       let id = drm.get(req_id)?.split("-").pop()?.replaceAll("b", "");
-      console.log(`Album has been previously found on Deezer - adding ${id} to releases`);
+      console.log(`${lidarr["title"]} has been previously found on Deezer - adding ${id} to releases`);
       
       // Get album info from deemix and merge releases
       let deemix_info = await getAlbum(id!);

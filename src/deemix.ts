@@ -1,11 +1,12 @@
 import _ from "lodash";
 const deemixUrl = "http://127.0.0.1:7272";
 import { getAllLidarrArtists } from "./lidarr.js";
-import { normalize } from "./helpers.js";
+import { normalize, checkSecondaryTypes } from "./helpers.js";
 import { link } from "fs";
 
-// Used to map deezer album IDs to musicbrainz release groups so they can be merged into later requests
-export let drm = new Map<string, string>();
+
+export let drm = new Map<string, string>(); // Used to map deezer album IDs to musicbrainz release groups so they can be merged into later requests
+let dac = new Map<string, any>; // Cache of album info requested ahead of time for live detection. May not be required if deemix has internal cache?
 
 function fakeId(id: any, type: string) {
   // artist
@@ -41,8 +42,18 @@ async function deemixArtists(name: string): Promise<[]> {
 }
 
 export async function deemixAlbum(id: string): Promise<any> {
-  const data = await fetch(`${deemixUrl}/albums/${id}`);
-  const j = (await data.json()) as any;
+  let j;
+  
+  if (dac.has(id)) {
+	console.log(`${id} is cached`);
+    j = dac.get(id);
+  } else {
+	console.log(`${id} not cached - requesting`);
+	const data = await fetch(`${deemixUrl}/albums/${id}`);
+    j = (await data.json()) as any;
+	dac.set(id, j);
+  }
+  
   return j;
 }
 
@@ -126,17 +137,7 @@ function getType(rc: string) {
 }
 
 export async function getAlbum(id: string) {
-  const d = await deemixAlbum(id);
-  // console.log(JSON.stringify(d));
-  
-  // Check if tracks have title_version "(Live)" and set secondaryTypes accordingly
-  let secondaryTypes = ["Live"];
-  for (let track of d["tracks"]["data"]) {
-	  if (track["title_version"] !== "(Live)") {
-		  secondaryTypes = [];
-		  break;
-	  }
-  }
+  let d = await deemixAlbum(id);
   
   const contributors = d["contributors"].map((c: any) => ({
     id: fakeId(c["id"], "artist"),
@@ -232,7 +233,7 @@ export async function getAlbum(id: string) {
         })),
       },
     ],
-    secondarytypes: secondaryTypes,
+    secondarytypes: checkSecondaryTypes(d),
     title: d["title"],
     type: getType(d["record_type"]),
   };
@@ -245,7 +246,7 @@ export async function getAlbums(name: string) {
     Id: `${fakeId(d["id"], "album")}`,
     OldIds: [],
     ReleaseStatuses: ["Official"],
-    SecondaryTypes: [],
+    SecondaryTypes: ["None"], // Will be replaced later
     Title: d["title"],
     LowerTitle: d["title"].toLowerCase(),
     Type: getType(d["record_type"]),
@@ -389,6 +390,8 @@ export async function getArtist(lidarr: any) {
     });
   }
 
+  // let artist = getLidarrArtist();
+
   const albums = await getAlbums(lidarr["artistname"]);
   
   // console.log(JSON.stringify(lidarr["Albums"]));
@@ -415,13 +418,18 @@ export async function getArtist(lidarr: any) {
 	}
   }
   
+  // Request information for unmatched albums to check if they're live
+  for (let album of albums) {
+    let id = album["Id"].split("/").pop()?.split("-").pop()?.replaceAll("b", "");
+    let a = await deemixAlbum(id!);
+	album["SecondaryTypes"] = checkSecondaryTypes(a);
+  }
+  
   // Add items that were not matched earlier to album list
   lidarr["Albums"] = [
     ...lidarr["Albums"],
     ...albums,
   ];
-  
-  
   
   return lidarr;
 }

@@ -28,3 +28,16 @@ export function removeKeys(obj: any, keys: any) {
   }
   return obj;
 }
+
+export function checkSecondaryTypes(albuminfo: any) {
+	let secondaryTypes = ["Live"];
+	
+	for (let track of albuminfo["tracks"]["data"]) {
+		if (track["title_version"] !== "(Live)") {
+			secondaryTypes = [];
+			break;
+		}
+	}
+	
+	return secondaryTypes;
+}
