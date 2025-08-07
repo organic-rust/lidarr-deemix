@@ -1,12 +1,13 @@
 import _ from "lodash";
 const deemixUrl = "http://127.0.0.1:7272";
-import { getAllLidarrArtists } from "./lidarr.js";
+import { getAllLidarrArtists, getLidarrArtist, getLidarrArtistTags } from "./lidarr.js";
 import { normalize, checkSecondaryTypes } from "./helpers.js";
 import { link } from "fs";
 
 
 export let drm = new Map<string, string>(); // Used to map deezer album IDs to musicbrainz release groups so they can be merged into later requests
 let dac = new Map<string, any>; // Cache of album info requested ahead of time for live detection. May not be required if deemix has internal cache?
+
 
 function fakeId(id: any, type: string) {
   // artist
@@ -389,9 +390,7 @@ export async function getArtist(lidarr: any) {
       Url: artist!["picture_xl"],
     });
   }
-
-  // let artist = getLidarrArtist();
-
+	
   const albums = await getAlbums(lidarr["artistname"]);
   
   // console.log(JSON.stringify(lidarr["Albums"]));
@@ -417,6 +416,13 @@ export async function getArtist(lidarr: any) {
 		}
 	}
   }
+	
+	// Check artist tags in lidarr to see if we want deemix only results
+	let tags = await getLidarrArtistTags(lidarr["id"]);
+	if (tags.includes("mb_only")) {
+		console.log(`${lidarr["artistname"]} is tagged with mb_only - excluding releases not on musicbrainz`);
+		return lidarr;
+	}
   
   // Request information for unmatched albums to check if they're live
   for (let album of albums) {

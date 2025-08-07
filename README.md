@@ -4,6 +4,7 @@
 - Adds deemix release into musicbrainz release group where possible so both can be visible to Lidarr
 - Improved handling and matching of release titles
 - Re-implemented live album detection based on track tags
+- Artists tagged with mb_only will not have deemix results returned that are not also on musicbrainz. Useful when there's multiple artists with the same name
 
 ---
 <div align="center">
