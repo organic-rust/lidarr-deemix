@@ -47,10 +47,11 @@ This tool helps to enrich Lidarr, by providing a custom proxy, that _hooks into_
 
 - Use the provided [docker-compose.yml](./docker-compose.yml) as an example.
   - **DEEMIX_ARL=xxx** your deezer ARL (get it from your browsers cookies)
-  - **PRIO_DEEMIX=true** If albums with the same name exist, prioritize the ones comming from deemix
-  - **OVERRIDE_MB=true** override MusicBrainz completely - **WARNING!** This will delete all your artists/albums imported from MusicBrainz.
-  - **LIDARR_URL=http://lidarr:8686** The URL of your Lidarr instance (with port), so this library can communicate with it. Important for **OVERRIDE_MB**
-  - **LIDARR_API_KEY=xxx** The Lidarr API Key. Important for **OVERRIDE_MB**
+  - **LIDARR_URL=http://lidarr:8686** The URL of your Lidarr instance (with port), so this library can communicate with it.
+  - **LIDARR_API_KEY=xxx** The Lidarr API Key.
+  - **LIDARR_METADATA_SERVER=https://api.lidarr.audio** URL for metadata server
+  - **SELF_HOSTED_METADATA=false** Removes "/api/v0.4" from path in requests to metadata server. Set to true if self-hosting
+  - **MERGE_RELEASES=true** Adds Deemix metadata into musicbrainz release group if both exist. Allows importing Deemix downloads when the number of tracks differs to the release on musicbrainz
 - Go to **Lidarr -> Settings -> General**
   - **Certificate Validation:** to _Disabled_
   - **Use Proxy:** ✅
