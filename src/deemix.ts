@@ -127,6 +127,17 @@ function getType(rc: string) {
 
 export async function getAlbum(id: string) {
   const d = await deemixAlbum(id);
+  // console.log(JSON.stringify(d));
+  
+  // Check if tracks have title_version "(Live)" and set secondaryTypes accordingly
+  let secondaryTypes = ["Live"];
+  for (let track of d["tracks"]["data"]) {
+	  if (track["title_version"] !== "(Live)") {
+		  secondaryTypes = [];
+		  break;
+	  }
+  }
+  
   const contributors = d["contributors"].map((c: any) => ({
     id: fakeId(c["id"], "artist"),
     artistaliases: [],
@@ -221,7 +232,7 @@ export async function getAlbum(id: string) {
         })),
       },
     ],
-    secondarytypes: [],
+    secondarytypes: secondaryTypes,
     title: d["title"],
     type: getType(d["record_type"]),
   };
@@ -229,7 +240,7 @@ export async function getAlbum(id: string) {
 
 export async function getAlbums(name: string) {
   const dalbums = await deemixAlbums(name);
-
+  
   let dtoRalbums = dalbums.map((d) => ({
     Id: `${fakeId(d["id"], "album")}`,
     OldIds: [],
@@ -379,13 +390,16 @@ export async function getArtist(lidarr: any) {
   }
 
   const albums = await getAlbums(lidarr["artistname"]);
-
-  let existing = lidarr["Albums"].map((a: any) => normalize(a["Title"]));
+  
+  // console.log(JSON.stringify(lidarr["Albums"]));
+  // console.log(JSON.stringify(albums));
   
   // Match release groups with the same name, and store the IDs so that the releases can be merged when the album info is requested
   for (let lalbum of lidarr["Albums"]) {
-    for (let dalbum of albums) {
-		if (normalize(lalbum["Title"]) === normalize(dalbum["Title"])) {
+    for (var i = 0; i < albums.length; i++) {
+		let dalbum = albums[i];
+		
+		if (normalize(lalbum["Title"]) === normalize(dalbum["Title"]) && lalbum["Type"] == dalbum["Type"]) {
 			console.log(`Matched release ${lalbum["Title"]}`);
 			drm.set(lalbum["Id"], dalbum["Id"]);
 			
@@ -393,18 +407,21 @@ export async function getArtist(lidarr: any) {
 			if (process.env.MERGE_RELEASES === "true" && !lalbum["ReleaseStatuses"].includes("Official")) {
 				lalbum["ReleaseStatuses"].push("Official");
 			}
+			
+			// Remove from deezer album list and decrement index so items are not skipped
+			albums.splice(i, 1);
+			--i;
 		}
 	}
-    
   }
   
-  // Add albums that are only on Deezer
+  // Add items that were not matched earlier to album list
   lidarr["Albums"] = [
     ...lidarr["Albums"],
-    ...albums.filter((a) => !existing.includes(normalize(a["Title"]))),
+    ...albums,
   ];
+  
+  
   
   return lidarr;
 }
-
-//
