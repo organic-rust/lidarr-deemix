@@ -1,7 +1,7 @@
 import _ from "lodash";
 const deemixUrl = "http://127.0.0.1:7272";
 import { getAllLidarrArtists, getLidarrArtist, getLidarrArtistTags } from "./lidarr.js";
-import { normalize, checkSecondaryTypes } from "./helpers.js";
+import { normalize, checkSecondaryTypes, sleep } from "./helpers.js";
 import { link } from "fs";
 
 
@@ -429,6 +429,7 @@ export async function getArtist(lidarr: any) {
     let id = album["Id"].split("/").pop()?.split("-").pop()?.replaceAll("b", "");
     let a = await deemixAlbum(id!);
 	album["SecondaryTypes"] = checkSecondaryTypes(a);
+	await sleep(1000);
   }
   
   // Add items that were not matched earlier to album list

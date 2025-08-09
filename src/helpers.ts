@@ -4,6 +4,10 @@ export function normalize(str: string) {
   return latinize(str.toLowerCase()).replace("'", "’");
 }
 
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export function removeKeys(obj: any, keys: any) {
   var index;
   for (var prop in obj) {
