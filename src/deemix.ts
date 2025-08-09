@@ -371,6 +371,33 @@ async function getAritstByName(name: string) {
   return artist;
 }
 
+function checkAlbumMatch(lalbum: any, dalbum: any) {
+	let name_match = false;
+	let type_match = false;
+	
+	//Check name match
+	if (normalize(lalbum["Title"]) === normalize(dalbum["Title"])) {
+		name_match = true;
+	} else {
+		// Clean names & re-match
+		let l_clean = lalbum["Type"] === "EP" && lalbum["Title"].endsWith(" EP") ? lalbum["Title"].slice(0, -3) : lalbum["Title"];
+		let d_clean = dalbum["Type"] === "EP" && dalbum["Title"].endsWith(" EP") ? dalbum["Title"].slice(0, -3) : dalbum["Title"];
+		
+		if (normalize(l_clean) === normalize(d_clean)) {
+			name_match =  true;
+		}
+	}
+	
+	//Check type match
+	if (lalbum["Type"] == dalbum["Type"]) {
+		type_match = true;
+	} else if ((lalbum["Type"] == "Album" || lalbum["Type"] == "EP") && (dalbum["Type"] == "Album" || dalbum["Type"] == "EP")) {
+		type_match = true;
+	}
+	
+	return name_match && type_match;
+}
+
 export async function getArtist(lidarr: any) {
   if (lidarr["error"]) return lidarr;
   const artist = await getAritstByName(lidarr["artistname"]);
@@ -401,7 +428,7 @@ export async function getArtist(lidarr: any) {
     for (var i = 0; i < albums.length; i++) {
 		let dalbum = albums[i];
 		
-		if (normalize(lalbum["Title"]) === normalize(dalbum["Title"]) && lalbum["Type"] == dalbum["Type"]) {
+		if (checkAlbumMatch(lalbum, dalbum)) {
 			console.log(`Matched release ${lalbum["Title"]}`);
 			drm.set(lalbum["Id"], dalbum["Id"]);
 			
