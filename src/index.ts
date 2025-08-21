@@ -12,6 +12,7 @@ import {
 } from "./deemix.js";
 import { removeKeys } from "./helpers.js";
 import { drm } from "./deemix.js";
+import { existsSync, mkdirSync } from "fs";
 
 const scrobblerApiUrl = "https://ws.audioscrobbler.com";
 
@@ -163,3 +164,9 @@ fastify.get("*", async (req, res) => {
 fastify.listen({ port: 7171, host: "0.0.0.0" }, (err, address) => {
   console.log("Lidarr++Deemix running at " + address);
 });
+
+// Check that cache directory exists
+if (process.env.USE_DISK_CACHE === "true" && !existsSync(`/cache/album`)) {
+	console.log("cache directory does not exist - attempting to create");
+	mkdirSync(`/cache/album`, { recursive: true });
+}

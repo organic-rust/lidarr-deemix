@@ -2,7 +2,7 @@ import _ from "lodash";
 const deemixUrl = "http://127.0.0.1:7272";
 import { getAllLidarrArtists, getLidarrArtist, getLidarrArtistTags } from "./lidarr.js";
 import { normalize, checkSecondaryTypes, sleep } from "./helpers.js";
-import { link } from "fs";
+import { link, writeFileSync, readFileSync, existsSync } from "fs";
 
 
 export let drm = new Map<string, string>(); // Used to map deezer album IDs to musicbrainz release groups so they can be merged into later requests
@@ -43,16 +43,31 @@ async function deemixArtists(name: string): Promise<[]> {
 }
 
 export async function deemixAlbum(id: string): Promise<any> {
-  let j;
-  
-  if (dac.has(id)) {
-	console.log(`${id} is cached`);
-    j = dac.get(id);
-  } else {
-	console.log(`${id} not cached - requesting`);
-	const data = await fetch(`${deemixUrl}/albums/${id}`);
-    j = (await data.json()) as any;
-	dac.set(id, j);
+	let j;
+	
+	if (dac.has(id)) {
+		console.log(`${id} is cached in memory - not requesting`);
+		j = dac.get(id);
+	} else if (process.env.USE_DISK_CACHE === "true" && existsSync(`/cache/album/${id}`)) {
+		console.log(`${id} is cached on disk - not requesting`);
+		
+		// Read from disk
+		j = JSON.parse(readFileSync(`/cache/album/${id}`, 'utf-8'));
+		
+		// Save to memory cache
+		dac.set(id, j);
+	} else {
+		console.log(`${id} not cached - requesting`);
+		
+		// Request from deemix
+		const data = await fetch(`${deemixUrl}/albums/${id}`);
+		j = (await data.json()) as any;
+		
+		// Save to memory and disk caches
+		dac.set(id, j);
+		if (process.env.USE_DISK_CACHE === "true") {
+			writeFileSync(`/cache/album/${id}`, JSON.stringify(j), 'utf-8');
+		}
   }
   
   return j;

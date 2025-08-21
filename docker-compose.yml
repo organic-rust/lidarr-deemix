@@ -4,6 +4,8 @@ services:
     container_name: lidarr-deemix
     ports:
       - 8080:8080
+    volumes:
+      - /path/to/disk/cache:/cache # Directory for disk cache. This line can be removed if disk cache is not being used
     environment:
       - DEEMIX_ARL=xxxx
       - LIDARR_URL=http://192.168.100.201:8686 # The URL of your Lidarr instance
@@ -11,3 +13,4 @@ services:
       - LIDARR_METADATA_SERVER=https://api.musicinfo.pro # Lidarr metadata server to use. Default is https://api.lidarr.audio
       - SELF_HOSTED_METADATA=false # Removes "/api/v0.4" from path in requests to metadata server. Set to true if self-hosting
       - MERGE_RELEASES=true # Add Deezer release to results from Musicbrainz. Allows Deemix downloads to import even if none of the releases on Musicbrainz match. Slows down updates
+      - USE_DISK_CACHE=false # Mainly for testing, helps prevent arl from being blocked. Currently does not expire
