@@ -390,13 +390,31 @@ function checkAlbumMatch(lalbum: any, dalbum: any) {
 	let name_match = false;
 	let type_match = false;
 	
-	//Check name match
+	// Check name match
 	if (normalize(lalbum["Title"]) === normalize(dalbum["Title"])) {
 		name_match = true;
 	} else {
-		// Clean names & re-match
+		// Remove " EP" from EP titles
 		let l_clean = lalbum["Type"] === "EP" && lalbum["Title"].endsWith(" EP") ? lalbum["Title"].slice(0, -3) : lalbum["Title"];
 		let d_clean = dalbum["Type"] === "EP" && dalbum["Title"].endsWith(" EP") ? dalbum["Title"].slice(0, -3) : dalbum["Title"];
+		
+		// Remove Edition name for albums
+		if (dalbum["Type"] === "Album") {
+			let m = dalbum["Title"].match(/ \(Deluxe( Edition)?\)$/);
+			
+			if (m) {
+				d_clean = d_clean.slice(0, m.index);
+			}
+		}
+		
+		// Remove featured artists from single names to match musicbrainz
+		if (dalbum["Type"] === "Single") {
+			let m = dalbum["Title"].match(/ \(feat\. .+\)$/);
+			
+			if (m) {
+				d_clean = d_clean.slice(0, m.index);
+			}
+		}
 		
 		if (normalize(l_clean) === normalize(d_clean)) {
 			name_match =  true;
